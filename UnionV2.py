@@ -30,14 +30,15 @@ class Unite():
         lr_val = 0
         ud_val = 0
         fb_val = 0
+        turn_val = 0
         to_land_check = 0
         # refine roll value 
         if val[0] < 10 and val[0] > -10:
             lr_val = 0
         elif val[0] > 60: 
-            lr_val = 100
-        elif val[0] < -60:
             lr_val = -100
+        elif val[0] < -60:
+            lr_val = 100
         elif val[0] > 10:
             lr_val = int( ( (val[0] - 10) / 50 * 90 + 10) * (-1) )
         elif val[0] < -10:
@@ -56,13 +57,15 @@ class Unite():
             fb_val = int((val[1] + 10) / 50 * 90 - 10)
         
         # ud_val = val[2]
-        to_land_check = val[3]
+        # turn_val = val[3]
+        to_land_check = val[4]
         """
         we must normalize lr ud fb value
         plz normalize lr ud fb value before use this function.
         roll : max : -60 / 60, min : -10 / 10
         pitch : max : -60 / 40, min :- 10 / 10
         height : ?
+        turn : ?
         """
         if not self.is_takeoff:
             if to_land_check > 0.8:
@@ -81,7 +84,7 @@ class Unite():
                     send_value = (0,0,0,0)
                     self.dr.remote(send_value)
                 else:
-                    send_value = (lr_val, ud_val, fb_val, 0)
+                    send_value = (lr_val, ud_val, fb_val, turn_val)
                     self.dr.remote(send_value)
         print(self.is_ok)
 

@@ -15,7 +15,7 @@ class SampleListener(Leap.Listener):
     bone_names = ['Metacarpal', 'Proximal', 'Intermediate', 'Distal']
     state_names = ['STATE_INVALID', 'STATE_START', 'STATE_UPDATE', 'STATE_END']
     order_name = ""
-    rh_value = (0,0,0,0)
+    rh_value = (0,0,0,0,0)
     
     def on_init(self, controller):
         print "Initialized"
@@ -50,10 +50,12 @@ class SampleListener(Leap.Listener):
                 wrist_height = arm.wrist_position[1]
                 normal = hand.palm_normal
                 direction = hand.direction
+
                 pitch_value = direction.pitch * Leap.RAD_TO_DEG
                 roll_value = normal.roll * Leap.RAD_TO_DEG
+                yaw_value = normal.roll * Leap.RAD_TO_DEG
                 grap_value = hand.grab_strength
-                self.rh_value = (roll_value, wrist_height, pitch_value, grap_value)
+                self.rh_value = (roll_value, pitch_value, wrist_height, yaw_value, grap_value)
                 """
                 if grap_value > 0.9:
                     self.order_name = "grip"
@@ -72,8 +74,8 @@ class SampleListener(Leap.Listener):
                 else:
                     self.order_name = ""
                 """
-        if frame.hands is None or rh_check is False:
-            self.rh_value = (0,0,0,0)
+        if rh_check is False:
+            self.rh_value = (0,0,0,0,0)
         
     def state_string(self, state):
         if state == Leap.Gesture.STATE_START:
