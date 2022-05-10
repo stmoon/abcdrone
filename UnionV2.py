@@ -61,22 +61,22 @@ class Unite():
         # ud_val = val[2]
         # 80 / 120
         
-        if val[2] < 120 and val[2] > 80:
+        if val[2] < 200 and val[2] > 100:
             ud_val = 0
-        elif val[2] > 200:
+        elif val[2] > 300:
             ud_val = -100
-        elif val[2] < 30:
+        elif val[2] < 20:
             ud_val = 100
-        elif val[2] > 150: #up
-            ud_val = int( ( (val[2] - 150) / 50 * 90 + 10 )) 
-        elif val[2] < 80: #down
-            ud_val = int( ( (-1) * val[2] + 80) /50 * 90 + 10) * (-1)
+        elif val[2] > 200: #up
+            ud_val = int( ( (val[2] - 200) / 100 * 90 + 10 )) 
+        elif val[2] < 100: #down
+            ud_val = int( ( (-1) * val[2] + 100) /80 * 90 + 10) * (-1)
 
         # turn_val = val[3]
         
-        if val[3] > 45:
+        if val[3] > 35:
             turn_val = 50
-        elif val[3] < -45:
+        elif val[3] < -35:
             turn_val = -50
         
         to_land_check = val[4]
