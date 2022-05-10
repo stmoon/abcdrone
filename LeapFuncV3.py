@@ -53,7 +53,7 @@ class SampleListener(Leap.Listener):
 
                 pitch_value = direction.pitch * Leap.RAD_TO_DEG
                 roll_value = normal.roll * Leap.RAD_TO_DEG
-                yaw_value = normal.roll * Leap.RAD_TO_DEG
+                yaw_value = direction.yaw * Leap.RAD_TO_DEG
                 grap_value = hand.grab_strength
                 self.rh_value = (roll_value, pitch_value, wrist_height, yaw_value, grap_value)
                 """

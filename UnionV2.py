@@ -32,32 +32,53 @@ class Unite():
         fb_val = 0
         turn_val = 0
         to_land_check = 0
+
         # refine roll value 
+
         if val[0] < 10 and val[0] > -10:
             lr_val = 0
         elif val[0] > 60: 
             lr_val = -100
         elif val[0] < -60:
             lr_val = 100
-        elif val[0] > 10:
+        elif val[0] > 10: # right
             lr_val = int( ( (val[0] - 10) / 50 * 90 + 10) * (-1) )
-        elif val[0] < -10:
+        elif val[0] < -10: # left
             lr_val = int( ( (val[0] + 10) / 50 * 90 + 10) * (-1) )
-
+        
         #refine pitch value
         if val[1] < 10 and val[1] > -10:
             fb_val = 0
-        elif val[1] > 40:
+        elif val[1] > 50:
             fb_val = 100
-        elif val[1] < -60:
+        elif val[1] < -70:
             fb_val = -100
-        elif val[1] > 10:
-            fb_val = int((val[1] - 10) / 30 * 90 + 10)
-        elif val[1] < -10:
-            fb_val = int((val[1] + 10) / 50 * 90 - 10)
+        elif val[1] > 20: #back
+            fb_val = int((val[1] - 20) / 30 * 90 + 10) * (-1)
+        elif val[1] < -20: #forward
+            fb_val = int((val[1] + 20) / 50 * 90 - 10) * (-1)
         
         # ud_val = val[2]
+        # 80 / 120
+        
+        if val[2] < 120 and val[2] > 80:
+            ud_val = 0
+        elif val[2] > 200:
+            ud_val = -100
+        elif val[2] < 30:
+            ud_val = 100
+        elif val[2] > 150: #up
+            ud_val = int( ( (val[2] - 150) / 50 * 90 + 10 )) 
+        elif val[2] < 80: #down
+            ud_val = int( ( (-1) * val[2] + 80) /50 * 90 + 10) * (-1)
+
         # turn_val = val[3]
+        
+        if val[3] > 45:
+            turn_val = 50
+        elif val[3] < -45:
+            turn_val = -50
+        
         to_land_check = val[4]
         """
         we must normalize lr ud fb value
@@ -80,11 +101,8 @@ class Unite():
                     self.is_takeoff = False
                     self.is_ok = False
             else:
-                if lr_val == 0 and ud_val == 0 and fb_val == 0:
-                    send_value = (0,0,0,0)
-                    self.dr.remote(send_value)
-                else:
-                    send_value = (lr_val, ud_val, fb_val, turn_val)
+                if self.is_ok:
+                    send_value = (lr_val, fb_val, ud_val, turn_val)
                     self.dr.remote(send_value)
         print(self.is_ok)
 
