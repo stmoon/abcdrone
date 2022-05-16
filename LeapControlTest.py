@@ -30,10 +30,10 @@ class Unite():
 
         if val[0] < 15 and val[0] > -15:
             lr_val = 0
-        elif val[0] > 70: 
+        elif val[0] > 65: 
             lr_name = 'Right '
             lr_val = -100
-        elif val[0] < -70:
+        elif val[0] < -65:
             lr_name = 'Left '
             lr_val = 100
         elif val[0] > 15: # right
