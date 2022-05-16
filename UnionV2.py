@@ -35,28 +35,28 @@ class Unite():
 
         # refine roll value 
 
-        if val[0] < 10 and val[0] > -10:
+        if val[0] < 15 and val[0] > -15:
             lr_val = 0
-        elif val[0] > 60: 
+        elif val[0] > 65: 
             lr_val = -100
-        elif val[0] < -60:
+        elif val[0] < -65:
             lr_val = 100
-        elif val[0] > 10: # right
+        elif val[0] > 15: # right
             lr_val = int( ( (val[0] - 10) / 50 * 90 + 10) * (-1) )
-        elif val[0] < -10: # left
+        elif val[0] < -15: # left
             lr_val = int( ( (val[0] + 10) / 50 * 90 + 10) * (-1) )
         
         #refine pitch value
-        if val[1] < 10 and val[1] > -10:
+        if val[1] < 20 and val[1] > -15:
             fb_val = 0
         elif val[1] > 50:
             fb_val = 100
-        elif val[1] < -70:
+        elif val[1] < -45:
             fb_val = -100
         elif val[1] > 20: #back
             fb_val = int((val[1] - 20) / 30 * 90 + 10) * (-1)
-        elif val[1] < -20: #forward
-            fb_val = int((val[1] + 20) / 50 * 90 - 10) * (-1)
+        elif val[1] < -15: #forward
+            fb_val = int((val[1] + 20) / 30 * 90 - 10) * (-1)
         
         # ud_val = val[2]
         # 80 / 120

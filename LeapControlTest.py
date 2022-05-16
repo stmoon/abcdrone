@@ -30,9 +30,11 @@ class Unite():
 
         if val[0] < 15 and val[0] > -15:
             lr_val = 0
-        elif val[0] > 65: 
+        elif val[0] > 70: 
+            lr_name = 'Right '
             lr_val = -100
-        elif val[0] < -65:
+        elif val[0] < -70:
+            lr_name = 'Left '
             lr_val = 100
         elif val[0] > 15: # right
             lr_name = 'Right '
@@ -42,18 +44,20 @@ class Unite():
             lr_val = int( ( (val[0] + 15) / 50 * 90 + 10) * (-1) )
         
         #refine pitch value
-        if val[1] < 20 and val[1] > -10:
+        if val[1] < 20 and val[1] > -15:
             fb_val = 0
-        elif val[1] > 70:
+        elif val[1] > 50:
+            fb_name = 'Back '
             fb_val = 100
-        elif val[1] < -60:
+        elif val[1] < -45:
+            fb_name = 'Forward '
             fb_val = -100
         elif val[1] > 20: #back
             fb_name = 'Back '
-            fb_val = int((val[1] - 20) / 30 * 90 + 10) * (-1)
-        elif val[1] < -10: #forward
+            fb_val = int((val[1] - 20) / 30 * 90 + 10) 
+        elif val[1] < -15: #forward
             fb_name = 'Forward '
-            fb_val = int((val[1] + 10) / 50 * 90 - 10) * (-1)
+            fb_val = int((val[1] + 15) / 30 * 90 - 10) 
         
         # ud_val = val[2]
         # 80 / 120
@@ -61,9 +65,11 @@ class Unite():
         if val[2] < 200 and val[2] > 100:
             ud_val = 0
         elif val[2] > 300:
-            ud_val = -100
-        elif val[2] < 20:
+            ud_name = 'Up '
             ud_val = 100
+        elif val[2] < 20:
+            ud_name = 'Down '
+            ud_val = -100
         elif val[2] > 200: #up
             ud_name = 'Up '
             ud_val = int( ( (val[2] - 200) / 100 * 90 + 10 )) 
@@ -108,7 +114,7 @@ class Unite():
 		    
 
 def main():
-    
+    print "test"
     test = Unite()
     while 1:
         test.control_drone()
