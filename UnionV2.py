@@ -75,9 +75,9 @@ class Unite():
         # turn_val = val[3]
         
         if val[3] > 35:
-            turn_val = 50
-        elif val[3] < -35:
             turn_val = -50
+        elif val[3] < -35:
+            turn_val = 50
         
         to_land_check = val[4]
         """
