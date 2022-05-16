@@ -24,11 +24,11 @@ class drone:
     frame = None
     recv_data = ""
 
-    """
+    
     context = zmq.Context()
     zmq_sock = context.socket(zmq.PUB) 
     zmq_sock.bind("tcp://*:5555")
-    """
+    
     # Binding PC to Drone
     sock.bind(mypc_address)
 
@@ -73,9 +73,7 @@ class drone:
             ret, self.frame =capture.read()
             if(ret):
                 cv2.imshow('frame', self.frame)
-                """
                 self.zmq_sock.send(b"f")
-                """
             if cv2.waitKey (1)&0xFF == ord ('q'):
                 break
         capture.release()
