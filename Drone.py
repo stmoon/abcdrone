@@ -2,6 +2,8 @@ import threading
 import socket
 import cv2
 import zmq 
+import numpy as np
+import pickle
 import time
 """
 This is commit test
@@ -27,7 +29,7 @@ class drone:
     
     context = zmq.Context()
     zmq_sock = context.socket(zmq.PUB) 
-    zmq_sock.bind("tcp://*:5555")
+    zmq_sock.bind("tcp://192.168.10.2:5555")
     
     # Binding PC to Drone
     sock.bind(mypc_address)
@@ -70,10 +72,12 @@ class drone:
         if not not capture.isOpened():
             capture.open('udp://0.0.0.0:11111')
         while True:
-            ret, self.frame =capture.read()
+            ret, frame =capture.read()
             if(ret):
-                cv2.imshow('frame', self.frame)
-                self.zmq_sock.send(b"f")
+                cv2.imshow('frame', frame)
+                grayframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                img_pik = pickle.dumps(grayframe)
+                self.zmq_sock.send(img_pik)
             if cv2.waitKey (1)&0xFF == ord ('q'):
                 break
         capture.release()
@@ -168,13 +172,13 @@ class drone:
         self.sock.sendto(encode, self.tello_address)
         
       
-"""
+
 #Test Function
 dr = drone()
 
 
 dr.recv_thread()
-
+dr.cap_thread()
 while True: 
 
     try:
@@ -220,6 +224,6 @@ while True:
         dr.sock.close()  
         break
 
-"""
+
 
 

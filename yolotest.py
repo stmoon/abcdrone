@@ -1,9 +1,16 @@
 import torch
 import cv2
-import urllib
 import numpy as np
+import zmq 
+
 # Model
 # class
+
+context = zmq.Context() 
+
+socket = context.socket(zmq.SUB) 
+socket.connect("tcp://192.168.10.2:5555") 
+
 model = torch.hub.load('ultralytics/yolov5', 'yolov5s')  # or yolov5n - yolov5x6, custom
  
 # Images
@@ -13,7 +20,10 @@ model = torch.hub.load('ultralytics/yolov5', 'yolov5s')  # or yolov5n - yolov5x6
 # zmq로 numpy를 받으면
 # 이게 돌아가기 시작하는거임
 #이거어케함?
-img = cv2.imread('yoloimage.jpg', 0)
+
+img_pik = socket.recv()
+img = img_pik.loads(encoding='byte')
+#img = cv2.imread('yoloimage.jpg', 0)
 
 # Inference
 results = model(img)
