@@ -2,16 +2,21 @@ import torch
 import cv2
 import numpy as np
 import zmq 
+import urllib
+import os
+import pickle
 
 # Model
 # class
 
 context = zmq.Context() 
-
+path = os.getcwd()
 socket = context.socket(zmq.SUB) 
 socket.connect("tcp://192.168.10.2:5555") 
+socket.subscribe("")
 
-model = torch.hub.load('ultralytics/yolov5', 'yolov5s')  # or yolov5n - yolov5x6, custom
+
+model = torch.hub.load(path,'yolov5s', source = 'local')  # or yolov5n - yolov5x6, custom
  
 # Images
 #while(1):
@@ -22,14 +27,14 @@ model = torch.hub.load('ultralytics/yolov5', 'yolov5s')  # or yolov5n - yolov5x6
 #이거어케함?
 
 img_pik = socket.recv()
-img = img_pik.loads(encoding='byte')
+img = pickle.loads(img_pik,encoding='bytes')
 #img = cv2.imread('yoloimage.jpg', 0)
 
 # Inference
 results = model(img)
 
 # Results
-results.print()
+results.save()
 df = results.pandas()  # or .show(), .save(), .crop(), .pandas(), etc.
 df1 = df.xyxy[0]
 print(df1)
