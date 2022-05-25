@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -- coding: utf-8 --
+
 import threading 
 import socket
 import cv2
@@ -6,7 +9,7 @@ import numpy as np
 import pickle
 import time
 """
-This is commit test
+한글로 가능한지 확인하는 용도
 """
 #Drone Class to use Drone
 class drone:
