@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -- coding: utf-8 --
 
+from configparser import Interpolation
 import threading 
 import socket
 import cv2
@@ -85,6 +86,12 @@ class drone:
                 cv2.imshow('frame', frame)
                 # 이미지 흑백 변환
                 grayframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                """
+                # 이미지 리사이징 640x480
+                resize_frame = cv2.resize(grayframe, dszie=(640, 480), interpolation=cv2.INTER_AREA) 
+                # 이미지 인코딩
+                encode_result, encode_frame = cv2.imencode('.png', resize_frame)
+                """
                 # 객체 직렬화
                 img_pik = pickle.dumps(grayframe)
                 #발신
