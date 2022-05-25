@@ -9,6 +9,7 @@ import zmq
 import numpy as np
 import pickle
 import time
+import datetime
 """
 한글로 가능한지 확인하는 용도
 """
@@ -76,6 +77,7 @@ class drone:
     """
     def capturecv(self):
         capture = cv2.VideoCapture('udp://0.0.0.0:11111',cv2.CAP_FFMPEG)
+        cnt = 0
         if not not capture.isOpened():
             capture.open('udp://0.0.0.0:11111')
         while True:
@@ -84,18 +86,25 @@ class drone:
             if(ret):
                 #opencv를 이용한 화면출력
                 cv2.imshow('frame', frame)
-                # 이미지 흑백 변환
-                grayframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-                """
-                # 이미지 리사이징 640x480
-                resize_frame = cv2.resize(grayframe, dszie=(640, 480), interpolation=cv2.INTER_AREA) 
-                # 이미지 인코딩
-                encode_result, encode_frame = cv2.imencode('.png', resize_frame)
-                """
-                # 객체 직렬화
-                img_pik = pickle.dumps(grayframe)
-                #발신
-                self.zmq_sock.send(img_pik)
+                if cnt >= 2:
+                    start = time.time()
+                    # 이미지 흑백 변환
+                    grayframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                    """
+                    # 이미지 리사이징 640x480
+                    resize_frame = cv2.resize(grayframe, dszie=(640, 480), interpolation=cv2.INTER_AREA) 
+                    # 이미지 인코딩
+                    encode_result, encode_frame = cv2.imencode('.png', resize_frame)
+                    """
+                    # 객체 직렬화
+                    img_pik = pickle.dumps(grayframe)
+                    #발신
+                    self.zmq_sock.send(img_pik)
+                    val = time.time() - start
+                    print('delay = ', datetime.timedelta(val))
+                    cnt = 0
+                else:
+                    cnt = cnt + 1
             if cv2.waitKey (1)&0xFF == ord ('q'):
                 break
         capture.release()
