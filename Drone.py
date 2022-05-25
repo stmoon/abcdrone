@@ -16,11 +16,11 @@ class drone:
 
 
     """
-    mypc_address : PC address to communicate PC and Drone
-    tello_address : Drone address to communicate PC and Drone
-    sock : TCP socket to use UDP (PC-Drone)
-    frame : It will save frame from drone
-    recv_data = data
+    mypc_address : PC - Drone 통신 간 사용할 PC 주소
+    tello_address : PC - Drone 통신 간 사용할 Drone 주소
+    sock : PC - Drone UDP 통신 간 사용할 TCP 소켓
+    frame : 프레임 저장용 변수 (사용안하는 중)
+    recv_data = 드론에게서 받은 데이터 (Ok, Error 등)
     """
 
     mypc_address = ("0.0.0.0", 8889)
@@ -29,7 +29,7 @@ class drone:
     frame = None
     recv_data = ""
 
-    
+    # ZMQ 사용하기 위한 소켓 선언, PUB
     context = zmq.Context()
     zmq_sock = context.socket(zmq.PUB) 
     zmq_sock.bind("tcp://192.168.10.2:5555")
@@ -46,9 +46,9 @@ class drone:
 
     """
     receive / recv_thread
-    print data frome drone
-    almost "OK" or battery
-    it will be use thread
+    Drone에게서 받은 데이터 출력
+    Ok, Error, 배터리 퍼센티지 등
+    명령어 입력 후 반환하는 데이터를 출력하는 내용
     """
     def receive(self):
         while True: 
@@ -66,9 +66,12 @@ class drone:
 
     """
     capturecv / cap_thread
-    Used openCV's VideoCapture
-    it will be used thread too.
-    
+    openCV의 VideoCapture를 이용해서 화면을 캡쳐함.
+    캡쳐를 받은 것을 frame에 저장하고
+    cv2.imshow를 이용해서 화면을 띄우고 있습니다. (이 부분은 UI만들면 지워야 할 것)
+    이후 frame에 흑백처리를 하고
+    pickle로 직렬화를 한 뒤에
+    zmq를 이용해서 보냅니다.
     """
     def capturecv(self):
         capture = cv2.VideoCapture('udp://0.0.0.0:11111',cv2.CAP_FFMPEG)
@@ -76,10 +79,15 @@ class drone:
             capture.open('udp://0.0.0.0:11111')
         while True:
             ret, frame =capture.read()
+            # 제대로 받으면 ret값은 1임, 받았을 때 진행하는 것
             if(ret):
+                #opencv를 이용한 화면출력
                 cv2.imshow('frame', frame)
+                # 이미지 흑백 변환
                 grayframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                # 객체 직렬화
                 img_pik = pickle.dumps(grayframe)
+                #발신
                 self.zmq_sock.send(img_pik)
             if cv2.waitKey (1)&0xFF == ord ('q'):
                 break
@@ -176,7 +184,7 @@ class drone:
         
       
 
-#Test Function
+#드론 테스트용 코드
 dr = drone()
 
 
