@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -- coding: utf-8 --
 
-from configparser import Interpolation
 import threading 
 import socket
 import cv2
@@ -31,11 +30,19 @@ class drone:
     frame = None
     recv_data = ""
 
-    # ZMQ 사용하기 위한 소켓 선언, PUB
-    context = zmq.Context()
-    zmq_sock = context.socket(zmq.PUB) 
-    zmq_sock.bind("tcp://192.168.10.2:5555")
+    # 프레임 전송을 위한 소켓 선언, zmq의 pub로 선언
+    frame_context = zmq.Context()
+    frame_socket = frame_context.socket(zmq.PUB) 
+    frame_socket.bind("tcp://192.168.10.2:5555")
     
+    
+    # 객체 정보를 수신받기 위한 소켓 선언, zmq의 sub로 선언
+    info_context = zmq.Context() 
+    info_socket = info_context.socket(zmq.SUB) 
+    info_socket.connect("tcp://172.17.0.2:5555") 
+    info_socket.subscribe("")
+    
+
     # Binding PC to Drone
     sock.bind(mypc_address)
 
@@ -86,22 +93,25 @@ class drone:
             if(ret):
                 #opencv를 이용한 화면출력
                 cv2.imshow('frame', frame)
-                if cnt >= 2:
-                    start = time.time()
+                if cnt > 4:
+                    start = datetime.datetime.now()
+
                     # 이미지 흑백 변환
                     grayframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-                    """
                     # 이미지 리사이징 640x480
-                    resize_frame = cv2.resize(grayframe, dszie=(640, 480), interpolation=cv2.INTER_AREA) 
+                    resize_frame = cv2.resize(grayframe, dsize=(640, 480), interpolation=cv2.INTER_AREA) 
+                    """
                     # 이미지 인코딩
                     encode_result, encode_frame = cv2.imencode('.png', resize_frame)
                     """
                     # 객체 직렬화
-                    img_pik = pickle.dumps(grayframe)
+                    img_pik = pickle.dumps(resize_frame)
                     #발신
-                    self.zmq_sock.send(img_pik)
-                    val = time.time() - start
-                    print('delay = ', datetime.timedelta(val))
+                    self.frame_socket.send(img_pik)
+                    end = datetime.datetime.now()
+
+                    val = end - start
+                    #print(val)
                     cnt = 0
                 else:
                     cnt = cnt + 1
@@ -115,6 +125,16 @@ class drone:
         Th = threading.Thread(target = self.capturecv)
         Th.start()
     
+    def infoget(self):
+        while True:
+            info_pik = self.info_socket.recv()
+            info = pickle.loads(info_pik)
+            print(info)
+    
+    def info_thread(self):
+        Th = threading.Thread(target= self.infoget)
+        Th.start()
+
     """
     up / down / forward / back / left / right
     default = 50(cm)
@@ -199,7 +219,7 @@ class drone:
         self.sock.sendto(encode, self.tello_address)
         
       
-
+"""
 #드론 테스트용 코드
 dr = drone()
 
@@ -250,7 +270,7 @@ while True:
         print ('\n . . .\n')
         dr.sock.close()  
         break
-
+"""
 
 
 

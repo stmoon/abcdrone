@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -- coding: utf-8 --
+
 import Drone as TD
 import LeapFuncV3 as LF
 import time
@@ -6,23 +9,13 @@ class Unite():
     dr = TD.drone()
     dr.cap_thread()
     dr.recv_thread()
+    dr.info_thread()
     listener = LF.SampleListener()
     controller = LF.Leap.Controller()
     controller.add_listener(listener)
     
     is_takeoff = False
     is_ok = True
-    # list to avoid order overlap
-    movement_list = [False, False, False, False, False, False] 
-
-    def list_clean(self):
-        for list_val in self.movement_list:
-            if list_val:
-                list_val = False
-    
-    def before_move(self):
-        self.list_clean()
-        self.is_ok = False
     
     def control_drone(self):
         val = self.listener.rh_value
@@ -64,9 +57,9 @@ class Unite():
         if val[2] < 200 and val[2] > 100:
             ud_val = 0
         elif val[2] > 300:
-            ud_val = -100
-        elif val[2] < 20:
             ud_val = 100
+        elif val[2] < 20:
+            ud_val = -100
         elif val[2] > 200: #up
             ud_val = int( ( (val[2] - 200) / 100 * 90 + 10 )) 
         elif val[2] < 100: #down
