@@ -22,6 +22,7 @@ class drone:
     sock : PC - Drone UDP 통신 간 사용할 TCP 소켓
     frame : 프레임 저장용 변수 (사용안하는 중)
     recv_data = 드론에게서 받은 데이터 (Ok, Error 등)
+    human_check = 사람 유무를 체크할 때 사용할 변수
     """
 
     mypc_address = ("0.0.0.0", 8889)
@@ -29,19 +30,19 @@ class drone:
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     frame = None
     recv_data = ""
+    human_check = False
 
     # 프레임 전송을 위한 소켓 선언, zmq의 pub로 선언
     frame_context = zmq.Context()
     frame_socket = frame_context.socket(zmq.PUB) 
-    frame_socket.bind("tcp://192.168.10.2:5555")
+    frame_socket.bind("ipc:///home/chiz/shareF/ipc1")
     
     
     # 객체 정보를 수신받기 위한 소켓 선언, zmq의 sub로 선언
     info_context = zmq.Context() 
     info_socket = info_context.socket(zmq.SUB) 
-    info_socket.connect("tcp://172.17.0.2:5555") 
-    info_socket.subscribe("")
-    
+    info_socket.connect("tcp://172.17.0.4:5555") 
+    info_socket.setsockopt(zmq.SUBSCRIBE, '')
 
     # Binding PC to Drone
     sock.bind(mypc_address)
@@ -130,6 +131,20 @@ class drone:
             info_pik = self.info_socket.recv()
             info = pickle.loads(info_pik)
             print(info)
+            if len(info) == 0:
+                self.human_check = False
+                print('nothing in here')
+            else:
+                human_list = []
+                for i in range(len(info)):
+                    if info[i][5] == 0:
+                        human_list.append(info[i])
+                if len(human_list) != 0:
+                    print('human appear')
+                    self.human_check = True
+                else:
+                    print('no one')
+                    self.human_check = False
     
     def info_thread(self):
         Th = threading.Thread(target= self.infoget)
@@ -207,8 +222,11 @@ class drone:
     def remote(self, val = (0,0,0,100)):
 
         lr, fb, ud,  yaw = val
+        # 좌우 이동 값
         lr = str(lr)
+        # 앞뒤 이동 값
         fb = str(fb)
+        # 위 아래 이동 값
         ud = str(ud)
         yaw = str(yaw)
 
@@ -226,6 +244,7 @@ dr = drone()
 
 dr.recv_thread()
 dr.cap_thread()
+dr.info_thread()
 while True: 
 
     try:

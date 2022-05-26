@@ -13,13 +13,13 @@ import datetime
 # 객체 정보 송신을 위한 pub 선언
 info_context = zmq.Context()
 info_socket = info_context.socket(zmq.PUB) 
-info_socket.bind("tcp://172.17.0.2:5555")
+info_socket.bind("tcp://172.17.0.4:5555")
 
 #ZMQ SUB 선언
 frame_context = zmq.Context() 
 frame_socket = frame_context.socket(zmq.SUB) 
-frame_socket.connect("tcp://192.168.10.2:5555") 
-frame_socket.subscribe("")
+frame_socket.connect("ipc:///home/chiz/shareF/ipc1") 
+frame_socket.setsockopt_string(zmq.SUBSCRIBE, '')
 
 #로컬 위치 내의 yolov5모델을 불러옴
 path = os.getcwd()

@@ -88,7 +88,10 @@ class Unite():
                     self.is_ok = False
                     self.is_takeoff = True
         else:
-            if to_land_check > 0.8:
+            if self.dr.human_check == True:
+                send_value = (0,0,0,0)
+                self.dr.remote(send_value)
+            elif to_land_check > 0.8:
                 if self.is_ok:
                     send_value = (0,0,0,0)
                     self.dr.remote(send_value)
