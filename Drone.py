@@ -27,10 +27,13 @@ class drone:
 
     mypc_address = ("0.0.0.0", 8889)
     tello_address = ('192.168.10.1', 8889)
+    state_address = ("0.0.0.0", 8890)
+
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     frame = None
     recv_data = ""
     human_check = False
+    is_ok = True
 
     # 프레임 전송을 위한 소켓 선언, zmq의 pub로 선언
     frame_context = zmq.Context()
@@ -41,7 +44,7 @@ class drone:
     # 객체 정보를 수신받기 위한 소켓 선언, zmq의 sub로 선언
     info_context = zmq.Context() 
     info_socket = info_context.socket(zmq.SUB) 
-    info_socket.connect("tcp://172.17.0.4:5555") 
+    info_socket.connect("tcp://172.17.0.2:5555") 
     info_socket.setsockopt(zmq.SUBSCRIBE, '')
 
     # Binding PC to Drone
@@ -66,6 +69,9 @@ class drone:
                 data, server = self.sock.recvfrom(1518)
                 self.recv_data = data.decode(encoding="utf-8")
                 print(data.decode(encoding="utf-8"))
+                if "ok" in self.recv_data:
+                    self.is_ok = True
+                    self.recv_data = "" 
             except Exception:
                 print ('\nExit . . .\n')
                 break
@@ -138,7 +144,13 @@ class drone:
                 human_list = []
                 for i in range(len(info)):
                     if info[i][5] == 0:
-                        human_list.append(info[i])
+                        if info[i][2] < 215 or info[i][0] > 430:
+                            pass
+                        else:
+                            size = info[i][2] - info[i][0]
+                            if size > 160:
+                                human_list.append(info[i])
+                
                 if len(human_list) != 0:
                     print('human appear')
                     self.human_check = True
