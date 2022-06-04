@@ -6,6 +6,7 @@
 #
 # WARNING! All changes made in this file will be lost!
 
+from tokenize import String
 from PyQt5 import QtCore, QtGui, QtWidgets
 import cv2
 import pickle
@@ -84,6 +85,16 @@ class rcv_thread(QtCore.QThread):
                 bat = 100
             self.msleep(100)
 
+class list_thread(QtCore.QThread):
+    list_val = QtCore.pyqtSignal(str)
+
+    def run(self):
+        value = 0
+        while True:
+            self.list_val.emit(str(value))
+            value = value + 1
+            self.msleep(100)
+
 class state_thread(QtCore.QThread):
     state_val = QtCore.pyqtSignal(int)
 
@@ -156,6 +167,10 @@ class Ui_Dialog(QtWidgets.QWidget):
         elif detection == False:
             self.detection_label.setPixmap(self.notcheck)
     
+    def set_data_list(self, data):
+        self.value_list_view.addItem(data)
+        self.value_list_view.scrollToBottom()
+
     #처음에 실행되는거
     def setupUi(self, Dialog):
         # 위젯 겉에 두르는거
@@ -222,8 +237,8 @@ class Ui_Dialog(QtWidgets.QWidget):
         self.horizontalLayout.setSpacing(20)
         self.horizontalLayout.setObjectName("horizontalLayout")
 
-        #state 값 나오는 리스트 뷰
-        self.value_list_view = QtWidgets.QListView(self.image_widget)
+        #state 값 나오는 리스트 위젯
+        self.value_list_view = QtWidgets.QListWidget(self.image_widget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Ignored)
         sizePolicy.setHorizontalStretch(1)
         sizePolicy.setVerticalStretch(1)
@@ -233,7 +248,13 @@ class Ui_Dialog(QtWidgets.QWidget):
         self.value_list_view.setMaximumSize(QtCore.QSize(210, 210))
         self.value_list_view.setStyleSheet(mystyle)
         self.value_list_view.setObjectName("value_list_view")
-        
+        self.value_list_view.setAutoScroll(True)
+        self.value_list_view.setAutoScrollMargin(20)
+
+        list_th = list_thread()
+        list_th.start()
+        list_th.list_val.connect(self.set_data_list)
+
         self.horizontalLayout.addWidget(self.value_list_view)
         
         # 드론 상태 알려줄 위젯
