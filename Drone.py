@@ -34,13 +34,12 @@ class drone:
     recv_data = ""
     human_check = False
     is_ok = True
+    
+    #판별 결과 전송할 zmq
+    det_socket = zmq.Context()
+    det_socket = det_socket.socket(zmq.PUB)
+    det_socket.bind("ipc:///home/chiz/shareF/ipc2")
 
-    # 프레임 전송을 위한 소켓 선언, zmq의 pub로 선언
-    frame_context = zmq.Context()
-    frame_socket = frame_context.socket(zmq.PUB) 
-    frame_socket.bind("ipc:///home/chiz/shareF/ipc1")
-    
-    
     # 객체 정보를 수신받기 위한 소켓 선언, zmq의 sub로 선언
     info_context = zmq.Context() 
     info_socket = info_context.socket(zmq.SUB) 
@@ -80,6 +79,7 @@ class drone:
         Th = threading.Thread(target = self.receive)
         Th.start()
 
+
     """
     capturecv / cap_thread
     openCV의 VideoCapture를 이용해서 화면을 캡쳐함.
@@ -89,57 +89,12 @@ class drone:
     pickle로 직렬화를 한 뒤에
     zmq를 이용해서 보냅니다.
     """
-    def capturecv(self):
-        capture = cv2.VideoCapture('udp://0.0.0.0:11111',cv2.CAP_FFMPEG)
-        cnt = 0
-        if not not capture.isOpened():
-            capture.open('udp://0.0.0.0:11111')
-        while True:
-            ret, frame =capture.read()
-            # 제대로 받으면 ret값은 1임, 받았을 때 진행하는 것
-            if(ret):
-                #opencv를 이용한 화면출력
-                cv2.imshow('frame', frame)
-                if cnt > 4:
-                    start = datetime.datetime.now()
-
-                    # 이미지 흑백 변환
-                    grayframe = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-                    # 이미지 리사이징 640x480
-                    resize_frame = cv2.resize(grayframe, dsize=(640, 480), interpolation=cv2.INTER_AREA) 
-                    """
-                    # 이미지 인코딩
-                    encode_result, encode_frame = cv2.imencode('.png', resize_frame)
-                    """
-                    # 객체 직렬화
-                    img_pik = pickle.dumps(resize_frame)
-                    #발신
-                    self.frame_socket.send(img_pik)
-                    end = datetime.datetime.now()
-
-                    val = end - start
-                    #print(val)
-                    cnt = 0
-                else:
-                    cnt = cnt + 1
-            if cv2.waitKey (1)&0xFF == ord ('q'):
-                break
-        capture.release()
-        cv2.destroyAllWindows ()
-        self.sock.sendto ('streamoff'.encode (' utf-8 '), self.tello_address)
-    
-    def cap_thread(self):
-        Th = threading.Thread(target = self.capturecv)
-        Th.start()
-    
     def infoget(self):
         while True:
             info_pik = self.info_socket.recv()
             info = pickle.loads(info_pik)
-            print(info)
             if len(info) == 0:
                 self.human_check = False
-                print('nothing in here')
             else:
                 human_list = []
                 for i in range(len(info)):
@@ -152,11 +107,12 @@ class drone:
                                 human_list.append(info[i])
                 
                 if len(human_list) != 0:
-                    print('human appear')
                     self.human_check = True
                 else:
-                    print('no one')
                     self.human_check = False
+            
+            det_pik = pickle.dumps(self.human_check)
+            self.det_socket.send(det_pik)
     
     def info_thread(self):
         Th = threading.Thread(target= self.infoget)
@@ -249,59 +205,59 @@ class drone:
         self.sock.sendto(encode, self.tello_address)
         
       
-"""
-#드론 테스트용 코드
-dr = drone()
+if __name__ == "__main__":
+
+    #드론 테스트용 코드
+    dr = drone()
 
 
-dr.recv_thread()
-dr.cap_thread()
-dr.info_thread()
-while True: 
+    dr.recv_thread()
+    dr.info_thread()
+    while True: 
 
-    try:
-        msg = raw_input("")
+        try:
+            msg = raw_input("")
 
-        if not msg:
-            break  
+            if not msg:
+                break  
 
-        if 'end' in msg:
-            print ('...')
+            if 'end' in msg:
+                print ('...')
+                dr.sock.close()  
+                break
+
+            if msg == "u":
+                dr.up()
+            elif msg =="d":
+                dr.down()
+            elif msg == "f":
+                dr.forward()
+            elif msg == "b":
+                dr.back()
+            elif msg == "l":
+                dr.left()
+            elif msg == "r":
+                dr.right()
+            elif msg == "la":
+                dr.land()
+            elif msg == "t":
+                dr.takeoff()
+            elif msg == "c":
+                dr.command()
+            elif msg == "s":
+                dr.speed()
+            elif msg == "stop":
+                dr.stop()
+            elif msg == "rc":
+                dr.remote()
+            elif msg == "bt":
+                dr.battery()
+
+        except KeyboardInterrupt:
+            print ('\n . . .\n')
             dr.sock.close()  
             break
 
-        if msg == "u":
-            dr.up()
-        elif msg =="d":
-            dr.down()
-        elif msg == "f":
-            dr.forward()
-        elif msg == "b":
-            dr.back()
-        elif msg == "l":
-            dr.left()
-        elif msg == "r":
-            dr.right()
-        elif msg == "la":
-            dr.land()
-        elif msg == "t":
-            dr.takeoff()
-        elif msg == "c":
-            dr.command()
-        elif msg == "s":
-            dr.speed()
-        elif msg == "stop":
-            dr.stop()
-        elif msg == "rc":
-            dr.remote()
-        elif msg == "bt":
-            dr.battery()
-
-    except KeyboardInterrupt:
-        print ('\n . . .\n')
-        dr.sock.close()  
-        break
-"""
 
 
 

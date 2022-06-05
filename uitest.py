@@ -7,6 +7,7 @@
 # WARNING! All changes made in this file will be lost!
 
 from tokenize import String
+from xmlrpc.client import boolean
 from PyQt5 import QtCore, QtGui, QtWidgets
 import cv2
 import pickle
@@ -32,7 +33,7 @@ class cap_thread(QtCore.QThread):
                 rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 h, w, ch = rgb.shape
                 bytes_per_line = ch * w
-                cvt_to_qtformat = QtCore.QImage(rgb.data, w, h, bytes_per_line, QtCore.QImage.Format_RGB888)
+                cvt_to_qtformat = QtGui.QImage(rgb.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888)
                 self.change_pixmap.emit(cvt_to_qtformat)
                 if cnt > 4:
                     # 이미지 흑백 변환
@@ -46,7 +47,7 @@ class cap_thread(QtCore.QThread):
                     # 객체 직렬화
                     img_pik = pickle.dumps(resize_frame)
                     #발신
-                    self.frame_socket.send(img_pik)
+                    frame_socket.send(img_pik)
                     cnt = 0
                 else:
                     cnt = cnt + 1
@@ -55,35 +56,28 @@ class cap_thread(QtCore.QThread):
         capture.release()
 
 class rcv_thread(QtCore.QThread):
+    """
+    드론 상태에서 빼와서 배터리만 써먹는 쓰레드
+    split으로 드론에서 받은 데이터를 분할하고
+    bat부분의 숫자부분만 사용하는 코드.
+    """
     bat_val = QtCore.pyqtSignal(int)
 
-    
     def run(self):
-        """
         mypc_address = ("0.0.0.0", 8890)
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.bind(mypc_address)
         while True: 
             try:
-                data, server = self.sock.recvfrom(1518)
+                data, server = sock.recvfrom(1518)
                 recv_data = data.decode(encoding="utf-8")
-                print(recv_data)
                 split_data = recv_data.split(';')
-                print(split_data)
                 value = int(split_data[10][4:])
                 self.bat_val.emit(value)
             except Exception:
                 print ('\nExit . . .\n')
                 break
-        """
-        bat = 100
-        while True:
-            self.bat_val.emit(bat)
-            if bat > 0:
-                bat = bat - 1
-            elif bat == 0:
-                bat = 100
-            self.msleep(100)
+        
 
 class list_thread(QtCore.QThread):
     list_val = QtCore.pyqtSignal(str)
@@ -97,52 +91,76 @@ class list_thread(QtCore.QThread):
 
 class state_thread(QtCore.QThread):
     state_val = QtCore.pyqtSignal(int)
+    state_str_val = QtCore.pyqtSignal(str)
+    state_context = zmq.Context()
+    state_socket = state_context.socket(zmq.SUB) 
+    state_socket.connect("ipc:///home/chiz/shareF/ipc3")
+    state_socket.setsockopt_string(zmq.SUBSCRIBE, '')
 
     def run(self):
-        
-        state_context = zmq.Context()
-        state_socket = state_context.socket(zmq.SUB) 
-        state_socket.bind("ipc:///home/chiz/shareF/ipc3")
-        state_socket.setsockopt_string(zmq.SUBSCRIBE, '')
-        
         #드론에서 상태를 전송 받아서 이를 emit 하는 방식
         #해야할 일
         #- 드론에 상태 보내는 zmq 만들기 
-        
         while True:
-            state_pik = state_socket.recv()
+            state_pik = self.state_socket.recv()
             state = pickle.loads(state_pik, encoding='bytes')
-            self.state_val.emit(state)
-        
+            state_value = 0
+            if len(state) != 0:
+                statestring = str(state[0],'utf-8')
+                if statestring in "Stop":
+                    state_value = 0
+                elif statestring in "Forward":
+                    state_value = 1
+                    statestring = statestring + ", " + str(state[1])
+                elif statestring in "Back":
+                    state_value = 2
+                    statestring = statestring + ", " + str(state[1])
+                elif statestring in "Up":
+                    state_value = 3
+                    statestring = statestring + ", " + str(state[1])
+                elif statestring in "Down":
+                    state_value = 4
+                    statestring = statestring + ", " + str(state[1])
+                elif statestring in "Left":
+                    state_value = 5
+                    statestring = statestring + ", " + str(state[1])
+                elif statestring in "Right":
+                    state_value = 6
+                    statestring = statestring + ", " + str(state[1])
+                elif statestring in "Takeoff":
+                    state_value = 7
+                    statestring = statestring
+                elif statestring in "Land":
+                    state_value = 8
+                    statestring = statestring
+                elif statestring in "Clockwise":
+                    state_value = 9
+                    statestring = statestring 
+                elif statestring in "Counterclockwise":
+                    state_value = 10
+                    statestring = statestring
+                self.state_val.emit(state_value)
+                self.state_str_val.emit(statestring)
             
         
 
 class detection_thread(QtCore.QThread):
     detection_val = QtCore.pyqtSignal(bool)
+    detection_context = zmq.Context()
+    detection_socket = detection_context.socket(zmq.SUB) 
+    detection_socket.connect("ipc:///home/chiz/shareF/ipc2")
+    detection_socket.setsockopt_string(zmq.SUBSCRIBE, '')
+
     def run(self):
-        """
-        detection_context = zmq.Context()
-        detection_socket = detection_context.socket(zmq.SUB) 
-        detection_socket.bind("ipc:///home/chiz/shareF/ipc4")
-        detection_socket.setsockopt_string(zmq.SUBSCRIBE, '')
         
         #드론에서 처리 결과를 받고 이를 emit 하는 방식
         #해야할 일
         #- 드론에 처리결과 보내는 zmq 만들기
-        
         while True:
-            detection_pik = detection_socket.recv()
+            detection_pik = self.detection_socket.recv()
             detection = pickle.loads(detection_pik, encoding='bytes')
-            self.state_val.emit(detection)
-        """
-        detection = True
-        while True:
             self.detection_val.emit(detection)
-            if detection == True:
-                detection = False
-            elif detection == False:
-                detection = True
-            self.msleep(1000)
+
 
 
 
@@ -158,8 +176,29 @@ class Ui_Dialog(QtWidgets.QWidget):
         self.frame_label.setPixmap(QtGui.QPixmap.fromImage(img))
 
     def set_state_image(self,state):
-        if state == 1:
-            pass
+        if state == 0:
+            self.state_label.setPixmap(self.stopsign)
+        elif state == 1:
+            self.state_label.setPixmap(self.forward)
+        elif state == 2:
+            self.state_label.setPixmap(self.back)
+        elif state == 3:
+            self.state_label.setPixmap(self.up)
+        elif state == 4:
+            self.state_label.setPixmap(self.down)
+        elif state == 5:
+            self.state_label.setPixmap(self.left)
+        elif state == 6:
+            self.state_label.setPixmap(self.right)
+        elif state == 7:
+            self.state_label.setPixmap(self.takeoff)
+        elif state == 8:
+            self.state_label.setPixmap(self.land)
+        elif state == 9:
+            self.state_label.setPixmap(self.cw)
+        elif state == 10:
+            self.state_label.setPixmap(self.ccw)
+            
 
     def set_detection_image(self,detection):
         if detection == True:
@@ -221,11 +260,11 @@ class Ui_Dialog(QtWidgets.QWidget):
         
 
         #capture thread test
-        """
+        
         cpt = cap_thread(self)
-        cpt.change_pixmap.connect(self.frame_label)
+        cpt.change_pixmap.connect(self.set_frame_image)
         cpt.start()
-        """
+        
         # 위젯 / hbox
         self.image_widget = QtWidgets.QWidget(Dialog)
         self.image_widget.setMinimumSize(QtCore.QSize(0, 232))
@@ -251,9 +290,6 @@ class Ui_Dialog(QtWidgets.QWidget):
         self.value_list_view.setAutoScroll(True)
         self.value_list_view.setAutoScrollMargin(20)
 
-        list_th = list_thread()
-        list_th.start()
-        list_th.list_val.connect(self.set_data_list)
 
         self.horizontalLayout.addWidget(self.value_list_view)
         
@@ -268,12 +304,24 @@ class Ui_Dialog(QtWidgets.QWidget):
         self.state_label.setMaximumSize(QtCore.QSize(210, 210))
         self.state_label.setStyleSheet(mystyle)
         self.state_label.setText("")
-        #self.state_label.setPixmap(QtGui.QPixmap("C:/Users/rlfrk/Desktop/Folder/University/4학년 1학기/졸설/forbidden.png"))
         self.state_label.setScaledContents(True)
         self.state_label.setAlignment(QtCore.Qt.AlignCenter)
         self.state_label.setObjectName("state_label")
         
         self.horizontalLayout.addWidget(self.state_label)
+
+        self.forward = QtGui.QPixmap("icon/forward.png")
+        self.back = QtGui.QPixmap("icon/back.png")
+        self.up  = QtGui.QPixmap("icon/up.png")
+        self.down = QtGui.QPixmap("icon/down.png")
+        self.left = QtGui.QPixmap("icon/left.png")
+        self.right  = QtGui.QPixmap("icon/right.png")
+        self.takeoff = QtGui.QPixmap("icon/takeoff.png")
+        self.land = QtGui.QPixmap("icon/land.png")
+        self.cw = QtGui.QPixmap("icon/cw.png")
+        self.ccw = QtGui.QPixmap("icon/ccw.png")
+        self.stopsign = QtGui.QPixmap("icon/stop.png")
+        self.state_label.setPixmap(self.stopsign)
         
         #판별 위젯
         self.detection_label = QtWidgets.QLabel(self.image_widget)
@@ -288,9 +336,9 @@ class Ui_Dialog(QtWidgets.QWidget):
         self.detection_label.setText("")
 
         # 버그체크해봐야할부분
-        self.check = QtGui.QPixmap("circle-ring.png")
-        self.detection_label.setPixmap(self.check)
-        self.notcheck = QtGui.QPixmap("cancel.png")
+        self.check = QtGui.QPixmap("icon/check.png")
+        self.notcheck = QtGui.QPixmap("icon/notcheck.png")
+        self.detection_label.setPixmap(self.notcheck)
 
         self.detection_label.setScaledContents(True)
         self.detection_label.setAlignment(QtCore.Qt.AlignCenter)
@@ -394,6 +442,11 @@ class Ui_Dialog(QtWidgets.QWidget):
         self.horizontalLayout_2.setStretch(2, 1)
         
         self.verticalLayout.addWidget(self.text_widget)
+
+        state_th = state_thread(self)
+        state_th.start()
+        state_th.state_val.connect(self.set_state_image)
+        state_th.state_str_val.connect(self.set_data_list)
 
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)

@@ -13,7 +13,7 @@ import datetime
 # 객체 정보 송신을 위한 pub 선언
 info_context = zmq.Context()
 info_socket = info_context.socket(zmq.PUB) 
-info_socket.bind("tcp://172.17.0.4:5555")
+info_socket.bind("tcp://172.17.0.2:5555")
 
 #ZMQ SUB 선언
 frame_context = zmq.Context() 
@@ -33,7 +33,7 @@ while True:
     #zmq로 프레임을 받고 역직렬화를 함.
     img_pik = frame_socket.recv()
     start = datetime.datetime.now()    
-    img = pickle.loads(img_pik,encoding='bytes')
+    img = pickle.loads(img_pik)
     end1 = datetime.datetime.now()
     #img = cv2.imread('yoloimage.jpg', 0)
     # 받은 프레임을 yolov5모델로 분석
