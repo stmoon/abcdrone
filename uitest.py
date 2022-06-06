@@ -81,17 +81,23 @@ class rcv_thread(QtCore.QThread):
 
 class list_thread(QtCore.QThread):
     list_val = QtCore.pyqtSignal(str)
-
+    list_context = zmq.Context()
+    list_socket = list_context.socket(zmq.SUB) 
+    list_socket.connect("ipc:///home/chiz/shareF/ipc4")
+    list_socket.setsockopt_string(zmq.SUBSCRIBE, '')
     def run(self):
         value = 0
         while True:
-            self.list_val.emit(str(value))
-            value = value + 1
-            self.msleep(100)
+            list_pik = self.list_socket.recv()
+            list_val = pickle.loads(list_pik, encoding='bytes')
+            if len(list_val) > 4:
+                list_str = '(' + str(list_val[0]) + ',' + str(list_val[1]) + ',' + \
+                    str(list_val[2]) + ',' + str(list_val[3]) + ',' + \
+                        str(list_val[4]) + ')'
+                self.list_val.emit(list_str)
 
 class state_thread(QtCore.QThread):
     state_val = QtCore.pyqtSignal(int)
-    state_str_val = QtCore.pyqtSignal(str)
     state_context = zmq.Context()
     state_socket = state_context.socket(zmq.SUB) 
     state_socket.connect("ipc:///home/chiz/shareF/ipc3")
@@ -111,36 +117,25 @@ class state_thread(QtCore.QThread):
                     state_value = 0
                 elif statestring in "Forward":
                     state_value = 1
-                    statestring = statestring + ", " + str(state[1])
                 elif statestring in "Back":
                     state_value = 2
-                    statestring = statestring + ", " + str(state[1])
                 elif statestring in "Up":
                     state_value = 3
-                    statestring = statestring + ", " + str(state[1])
                 elif statestring in "Down":
                     state_value = 4
-                    statestring = statestring + ", " + str(state[1])
                 elif statestring in "Left":
                     state_value = 5
-                    statestring = statestring + ", " + str(state[1])
                 elif statestring in "Right":
                     state_value = 6
-                    statestring = statestring + ", " + str(state[1])
                 elif statestring in "Takeoff":
                     state_value = 7
-                    statestring = statestring
                 elif statestring in "Land":
                     state_value = 8
-                    statestring = statestring
                 elif statestring in "Clockwise":
                     state_value = 9
-                    statestring = statestring 
                 elif statestring in "Counterclockwise":
                     state_value = 10
-                    statestring = statestring
                 self.state_val.emit(state_value)
-                self.state_str_val.emit(statestring)
             
         
 
@@ -446,7 +441,10 @@ class Ui_Dialog(QtWidgets.QWidget):
         state_th = state_thread(self)
         state_th.start()
         state_th.state_val.connect(self.set_state_image)
-        state_th.state_str_val.connect(self.set_data_list)
+
+        list_th = list_thread(self)
+        list_th.start()
+        list_th.list_val.connect(self.set_data_list)
 
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)

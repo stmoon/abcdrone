@@ -19,7 +19,7 @@ class SampleListener(Leap.Listener):
     state_names = ['STATE_INVALID', 'STATE_START', 'STATE_UPDATE', 'STATE_END']
     order_name = ""
     rh_value = (0,0,0,0,0)
-    
+    rh_check = False
     def on_init(self, controller):
         print "Initialized"
 
@@ -48,11 +48,11 @@ class SampleListener(Leap.Listener):
     """
     def on_frame(self, controller):
         frame = controller.frame()
-        rh_check = False
+        rh_checking = False
         #오른손만 사용하고 있음.
         for hand in frame.hands:
             if hand.is_right:
-                rh_check = True
+                rh_checking = True
 
                 arm = hand.arm
                 wrist_height = arm.wrist_position[1]
@@ -66,8 +66,9 @@ class SampleListener(Leap.Listener):
                 grap_value = hand.grab_strength
                 self.rh_value = (roll_value, pitch_value, wrist_height, yaw_value, grap_value)
         #오른손 안나오면 전부 0
-        if rh_check is False:
+        if rh_checking is False:
             self.rh_value = (0,0,0,0,0)
+        self.rh_check = rh_checking
         
     def state_string(self, state):
         if state == Leap.Gesture.STATE_START:

@@ -22,9 +22,13 @@ class Unite():
     state_socket = state_context.socket(zmq.PUB) 
     state_socket.bind("ipc:///home/chiz/shareF/ipc3")
     
+    list_context = zmq.Context()
+    list_socket = list_context.socket(zmq.PUB) 
+    list_socket.bind("ipc:///home/chiz/shareF/ipc4")
+
     def control_drone(self):
         val = self.listener.rh_value
-
+        rh_checking = self.listener.rh_check
         lr_val = 0
         ud_val = 0
         fb_val = 0
@@ -77,15 +81,12 @@ class Unite():
         elif val[3] < -35:
             turn_val = -50
         
-        to_land_check = val[4]
-        """
-        we must normalize lr ud fb value
-        plz normalize lr ud fb value before use this function.
-        roll : max : -60 / 60, min : -10 / 10
-        pitch : max : -60 / 40, min :- 10 / 10
-        height : ?
-        turn : ?
-        """
+        to_land_check = round(val[4],4)
+        if rh_checking == False:
+            ud_val = 0
+        ctrl_val = [lr_val, fb_val, ud_val, turn_val, to_land_check]
+        ctrl_pik = pickle.dumps(ctrl_val)
+        self.list_socket.send(ctrl_pik)
 
 
         if np.abs(turn_val) > 0:
@@ -112,7 +113,7 @@ class Unite():
 
         state_data = []
         if not self.is_takeoff:
-            if to_land_check > 0.8:
+            if to_land_check > 0.9:
                 if self.dr.is_ok:
                     self.dr.takeoff()
                     self.dr.is_ok = False
@@ -130,7 +131,7 @@ class Unite():
                 state_data.append("Stop")
                 state_data.append(0)
 
-            elif to_land_check > 0.8:
+            elif to_land_check > 0.9:
                 if self.dr.is_ok:
                     self.dr.land()
                     self.is_takeoff = False
