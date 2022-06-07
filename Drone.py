@@ -110,8 +110,10 @@ class drone:
                     self.human_check = True
                 else:
                     self.human_check = False
-            
-            det_pik = pickle.dumps(self.human_check)
+            #uitest용
+            #det_pik = pickle.dumps(self.human_check)
+            #uiV2용
+            det_pik = pickle.dumps(human_list)
             self.det_socket.send(det_pik)
     
     def info_thread(self):
