@@ -140,6 +140,7 @@ class frame_widget(QtWidgets.QLabel):
         self.state_list = None
         self.det_list = []
         self.drone_move = 0
+        self.rect_opacity = 1.0
 
         self.forward = QtGui.QPixmap("icon/forward.png")
         self.back = QtGui.QPixmap("icon/back.png")
@@ -209,7 +210,11 @@ class frame_widget(QtWidgets.QLabel):
 
         
         # 사람에 체크박스 그리는 부분
-        qpt.setOpacity(0.8)
+        qpt.setOpacity(self.rect_opacity)
+        if self.rect_opacity == 1.0:
+            self.rect_opacity = 0.8
+        elif self.rect_opacity == 0.8:
+            self.rect_opacity = 1.0
         qpt.setPen(QtGui.QPen(QtCore.Qt.red,6))         
         if len(self.det_list) != 0:
             for i in range(len(self.det_list)):
@@ -227,9 +232,9 @@ class frame_widget(QtWidgets.QLabel):
         qpt.setFont(font)
 
         if self.state_list == None:
-            qpt.drawText(event.rect(), QtCore.Qt.AlignLeading|QtCore.Qt.AlignRight|QtCore.Qt.AlignTop,' roll: ?\n pitch: ?\n yaw: ?\n battery: ?')
+            qpt.drawText(event.rect(), QtCore.Qt.AlignLeading|QtCore.Qt.AlignRight|QtCore.Qt.AlignTop,'roll: ?\n pitch: ?\n yaw: ?\n battery: ?')
         else:
-            text = self.state_list[1] + '\n' + self.state_list[0] + '\n' + self.state_list[2] + '\n' + 'battery:' + self.state_list[10][4:]
+            text = self.state_list[1] + '\n' + self.state_list[0] + '\n' + self.state_list[2] + ' \n' + 'battery:' + self.state_list[10][4:] 
             qpt.drawText(event.rect(), QtCore.Qt.AlignLeading|QtCore.Qt.AlignRight|QtCore.Qt.AlignTop,text)
 
         # 드론 상태 띄우는 부분
