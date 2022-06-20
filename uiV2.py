@@ -18,6 +18,7 @@ class cap_thread(QtCore.QThread):
     def run(self):
         frame_context = zmq.Context()
         frame_socket = frame_context.socket(zmq.PUB) 
+        #yolotest의 frame_socket과 동일한 위치 (ipc) 지정
         frame_socket.bind("ipc:///home/chiz/shareF/ipc1")
         capture = cv2.VideoCapture('udp://0.0.0.0:11111',cv2.CAP_FFMPEG)
         cnt = 0
@@ -82,6 +83,7 @@ class state_thread(QtCore.QThread):
     state_val = QtCore.pyqtSignal(int)
     state_context = zmq.Context()
     state_socket = state_context.socket(zmq.SUB) 
+    #UnionV2의 state_socket과 동일한 위치 (ipc)
     state_socket.connect("ipc:///home/chiz/shareF/ipc3")
     state_socket.setsockopt_string(zmq.SUBSCRIBE, '')
 
@@ -125,6 +127,7 @@ class detection_thread(QtCore.QThread):
     detection_val = QtCore.pyqtSignal(list)
     detection_context = zmq.Context()
     detection_socket = detection_context.socket(zmq.SUB) 
+    #Drone의 det_socket과 동일한 위치 (ipc)
     detection_socket.connect("ipc:///home/chiz/shareF/ipc2")
     detection_socket.setsockopt_string(zmq.SUBSCRIBE, '')
 

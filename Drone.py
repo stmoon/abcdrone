@@ -38,11 +38,13 @@ class drone:
     #판별 결과 전송할 zmq
     det_socket = zmq.Context()
     det_socket = det_socket.socket(zmq.PUB)
+    #uiV2의 detection_socket과 동일한 위치 (ipc)
     det_socket.bind("ipc:///home/chiz/shareF/ipc2")
 
     # 객체 정보를 수신받기 위한 소켓 선언, zmq의 sub로 선언
     info_context = zmq.Context() 
     info_socket = info_context.socket(zmq.SUB) 
+    # yolotest의 info_socket과 동일한 docker의 ip
     info_socket.connect("tcp://172.17.0.2:5555") 
     info_socket.setsockopt(zmq.SUBSCRIBE, '')
 
@@ -79,16 +81,6 @@ class drone:
         Th = threading.Thread(target = self.receive)
         Th.start()
 
-
-    """
-    capturecv / cap_thread
-    openCV의 VideoCapture를 이용해서 화면을 캡쳐함.
-    캡쳐를 받은 것을 frame에 저장하고
-    cv2.imshow를 이용해서 화면을 띄우고 있습니다. (이 부분은 UI만들면 지워야 할 것)
-    이후 frame에 흑백처리를 하고
-    pickle로 직렬화를 한 뒤에
-    zmq를 이용해서 보냅니다.
-    """
     def infoget(self):
         while True:
             info_pik = self.info_socket.recv()

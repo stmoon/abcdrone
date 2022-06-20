@@ -21,17 +21,14 @@ class Unite():
     드론의 최고 속도를 조정하는 용도
     10~100, 11부터 하는걸 권장, 안해봄
     """
-    speed = 100
+    speed = 50
 
     is_takeoff = False
     
     state_context = zmq.Context()
     state_socket = state_context.socket(zmq.PUB) 
+    #uiV2의 state_socket과 동일한 위치 (ipc)
     state_socket.bind("ipc:///home/chiz/shareF/ipc3")
-    
-    list_context = zmq.Context()
-    list_socket = list_context.socket(zmq.PUB) 
-    list_socket.bind("ipc:///home/chiz/shareF/ipc4")
 
     def control_drone(self):
         sp = copy.deecopy(self.speed)
@@ -92,9 +89,6 @@ class Unite():
         to_land_check = round(val[4],4)
         if rh_checking == False:
             ud_val = 0
-        ctrl_val = [lr_val, fb_val, ud_val, turn_val, to_land_check]
-        ctrl_pik = pickle.dumps(ctrl_val)
-        self.list_socket.send(ctrl_pik)
 
 
         if np.abs(turn_val) > 0:
