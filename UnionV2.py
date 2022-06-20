@@ -7,6 +7,7 @@ import time
 import numpy as np
 import zmq
 import pickle
+import copy
 
 class Unite():
     dr = TD.drone()
@@ -16,6 +17,12 @@ class Unite():
     controller = LF.Leap.Controller()
     controller.add_listener(listener)
     
+    """
+    드론의 최고 속도를 조정하는 용도
+    10~100, 11부터 하는걸 권장, 안해봄
+    """
+    speed = 100
+
     is_takeoff = False
     
     state_context = zmq.Context()
@@ -27,6 +34,7 @@ class Unite():
     list_socket.bind("ipc:///home/chiz/shareF/ipc4")
 
     def control_drone(self):
+        sp = copy.deecopy(self.speed)
         val = self.listener.rh_value
         rh_checking = self.listener.rh_check
         lr_val = 0
@@ -40,25 +48,25 @@ class Unite():
         if val[0] < 15 and val[0] > -15:
             lr_val = 0
         elif val[0] > 65: 
-            lr_val = -100
+            lr_val = (-1) * sp
         elif val[0] < -65:
-            lr_val = 100
+            lr_val = sp
         elif val[0] > 15: # right
-            lr_val = int( ( (val[0] - 10) / 50 * 90 + 10) * (-1) )
+            lr_val = int( ( (val[0] - 10) / 50 * (sp - 10) + 10) * (-1) )
         elif val[0] < -15: # left
-            lr_val = int( ( (val[0] + 10) / 50 * 90 + 10) * (-1) )
+            lr_val = int( ( (val[0] + 10) / 50 * (sp - 10) + 10) * (-1) )
         
         #refine pitch value
         if val[1] < 20 and val[1] > -15:
             fb_val = 0
         elif val[1] > 50:
-            fb_val = 100
+            fb_val = sp
         elif val[1] < -45:
-            fb_val = -100
+            fb_val = (-1) * sp
         elif val[1] > 20: #back
-            fb_val = int((val[1] - 20) / 30 * 90 + 10) * (-1)
+            fb_val = int((val[1] - 20) / 30 * (sp - 10) + 10) * (-1)
         elif val[1] < -15: #forward
-            fb_val = int((val[1] + 20) / 30 * 90 - 10) * (-1)
+            fb_val = int((val[1] + 20) / 30 * (sp - 10) - 10) * (-1)
         
         # ud_val = val[2]
         # 80 / 120
@@ -66,13 +74,13 @@ class Unite():
         if val[2] < 200 and val[2] > 100:
             ud_val = 0
         elif val[2] > 300:
-            ud_val = 100
+            ud_val = sp
         elif val[2] < 20:
-            ud_val = -100
+            ud_val = (-1) * sp
         elif val[2] > 200: #up
-            ud_val = int( ( (val[2] - 200) / 100 * 90 + 10 )) 
+            ud_val = int( ( (val[2] - 200) / 100 * (sp - 10) + 10 )) 
         elif val[2] < 100: #down
-            ud_val = int( ( (-1) * val[2] + 100) /80 * 90 + 10) * (-1)
+            ud_val = int( ( (-1) * val[2] + 100) /80 * (sp - 10) + 10) * (-1)
 
         # turn_val = val[3]
         
