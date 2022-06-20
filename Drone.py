@@ -93,10 +93,10 @@ class drone:
         while True:
             info_pik = self.info_socket.recv()
             info = pickle.loads(info_pik)
+            human_list = []
             if len(info) == 0:
                 self.human_check = False
             else:
-                human_list = []
                 for i in range(len(info)):
                     if info[i][5] == 0:
                         if info[i][2] < 215 or info[i][0] > 430:
