@@ -69,6 +69,15 @@ class SampleListener(Leap.Listener):
         if rh_checking is False:
             self.rh_value = (0,0,0,0,0)
         self.rh_check = rh_checking
+        #디버깅용
+        """
+        print("Pitch : ",self.rh_value[0])
+        print("Roll  : ",self.rh_value[1])
+        print("Heigth: ",self.rh_value[2])
+        print("Yaw   : ",self.rh_value[3])
+        print("Grap  : ",self.rh_value[4])
+        time.sleep(0.1)
+        """
         
     def state_string(self, state):
         if state == Leap.Gesture.STATE_START:
